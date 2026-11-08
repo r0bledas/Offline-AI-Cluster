@@ -55,9 +55,12 @@ By pooling available RAM and accelerators across machines running **macOS, Windo
 
 ---
 
-## 3. Reference Cluster Topology
+## 3. Reference Cluster Topology (Illustrative Example)
 
-An example heterogeneous deployment aggregating **~52 GB** of pooled memory across typical hardware tiers:
+> [!NOTE]
+> **Dynamic Scaling**: The architecture has **no fixed hardware or memory requirements**. The numbers below (e.g. 52 GB, 5 nodes) are solely an **illustrative example** showing how heterogeneous devices can pool memory. In reality, you can run a 2-node cluster with two 8 GB laptops, a 3-node cluster with mini PCs, or an 8-node cluster. The cluster dynamically queries each node's actual free RAM at runtime and automatically partitions the tensor graph accordingly.
+
+An example deployment pooling memory across arbitrary hardware tiers:
 
 ```mermaid
 flowchart TD
@@ -194,15 +197,15 @@ build-win\bin\Release\ggml-rpc-server.exe -H 0.0.0.0 -p 50052 -c
 On the coordinator workstation, start `llama-server` pointing to the worker node IP addresses:
 
 ```bash
+# Example manual start (proportions adjust dynamically to your specific machines):
 ./llama-server \
-  -m models/qwen2.5-32b-instruct-q4_k_m.gguf \
+  -m models/your-model.gguf \
   --host 0.0.0.0 \
-  --port 8080 \
-  --rpc 192.168.1.101:50052,192.168.1.102:50052,192.168.1.103:50052,192.168.1.104:50052 \
-  -ngl 99 \
-  --tensor-split 16,16,8,8,4 \
-  -c 4096
+  --port 8000 \
+  --rpc <worker1_ip>:50052,<worker2_ip>:50052 \
+  -c 2048
 ```
+*(When using `cluster.cmd` or `setup.bat`, the coordinator automatically builds the `--rpc` worker argument from your `cluster.config.json` or dynamic node discovery).*
 
 ### Step 3: Start the Gateway & Query
 ```bash
