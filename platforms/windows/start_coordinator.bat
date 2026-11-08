@@ -25,14 +25,20 @@ echo.
 
 set MODEL_PATH=%~1
 if "%MODEL_PATH%"=="" (
-    if exist "D:\llms\Llama-3.2-1B-Instruct-Q4_K_M.gguf" (
+    if exist "%REPO_ROOT%\models\Llama-3.2-1B-Instruct-Q4_K_M.gguf" (
+        set MODEL_PATH=%REPO_ROOT%\models\Llama-3.2-1B-Instruct-Q4_K_M.gguf
+    ) else if exist "D:\llms\Llama-3.2-1B-Instruct-Q4_K_M.gguf" (
         set MODEL_PATH=D:\llms\Llama-3.2-1B-Instruct-Q4_K_M.gguf
+    ) else if exist "%REPO_ROOT%\models\*.gguf" (
+        for %%f in ("%REPO_ROOT%\models\*.gguf") do (
+            if not defined MODEL_PATH set MODEL_PATH=%%f
+        )
     ) else if exist "D:\llms\qwen2.5-0.5b-instruct-q4_k_m.gguf" (
         set MODEL_PATH=D:\llms\qwen2.5-0.5b-instruct-q4_k_m.gguf
     ) else if exist "D:\llms\Qwen3.8-27B-Q4_K_M.gguf" (
         set MODEL_PATH=D:\llms\Qwen3.8-27B-Q4_K_M.gguf
     ) else (
-        echo [ERROR] No model GGUF specified or found in D:\llms\.
+        echo [ERROR] No model GGUF specified or found in models\ or D:\llms\.
         echo Usage: start_coordinator.bat [path_to_model.gguf] [worker_ip:port]
         pause
         exit /b 1
