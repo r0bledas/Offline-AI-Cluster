@@ -93,7 +93,61 @@ flowchart TD
 
 ## 4. Quickstart: Launching the Cluster
 
-### Option A: Zero-Config Auto-Discovery (Recommended)
+### Option A: 1-Click Automated Setup for Any New Machine (Recommended)
+
+To set up a fresh PC from GitHub in 1 click:
+
+#### On Windows:
+```bat
+git clone https://github.com/r0bledas/Offline-AI-Cluster.git
+cd Offline-AI-Cluster
+setup.bat
+```
+`setup.bat` automatically:
+1. Initializes `cluster.config.json` from the dynamic template.
+2. Downloads and unpacks official native `llama.cpp` binaries (`llama-server.exe`, `ggml-rpc-server.exe`, Vulkan/AVX2 DLLs).
+3. Offers 1-click download of verified starter model (`Llama-3.2-1B-Instruct-Q4_K_M.gguf`, 807 MB).
+4. Adds the `cluster` CLI command to your system `PATH`.
+5. Creates a 1-click `Offline AI Cluster.bat` launcher on your Desktop.
+6. Launches the interactive Multi-Node Hub.
+
+#### On macOS & Linux:
+```bash
+git clone https://github.com/r0bledas/Offline-AI-Cluster.git
+cd Offline-AI-Cluster
+chmod +x setup.sh && ./setup.sh
+```
+
+---
+
+### Option B: Unified Multi-Node CLI (`cluster`)
+
+Once installed, use the unified `cluster` CLI from any directory:
+
+```bat
+# Check health, online ports, RAM, and telemetry across all nodes
+cluster status
+
+# Send an inference prompt to the cluster
+cluster prompt "Explain distributed tensor parallelization in two sentences."
+
+# Remotely start/stop worker daemons on all nodes (or a specific node index)
+cluster worker-start
+cluster worker-stop
+
+# Execute a shell command remotely on any node
+cluster exec 0 "systeminfo"
+
+# Open Remote Desktop to a worker node with saved credentials
+cluster rdp 0
+
+# Check and hot-update binaries directly from upstream GitHub releases
+cluster update
+```
+
+---
+
+### Option C: Zero-Config Python Discovery Gateway
 On the coordinator workstation:
 ```bash
 python scripts/gateway.py
