@@ -43,7 +43,12 @@ By pooling available RAM and accelerators across machines running **macOS, Windo
 
 ### 3. Dynamic Circuit Breaker & Failover Gateway
 - Multi-threaded reverse proxy (`scripts/gateway.py`) providing a unified OpenAI-compatible endpoint on port `8000`.
+- Integrated UDP discovery beacon (`port 50050`) for instant auto-joining of worker nodes.
 - Actively polls node heartbeats. If a worker disconnects (laptop sleep, battery depletion, or network packet drop), queries are automatically rerouted to surviving nodes in $<500\text{ ms}$.
+
+### 4. Zero-Config Portable Auto-Discovery (Single-Binary + Single-Script)
+- Drop `ggml-rpc-server` and `scripts/node_agent.py` onto **any** machine and run one command.
+- The node inspects physical RAM directly via OS kernel calls, launches the backend, broadcasts across the LAN, and registers with the Orchestrator without manual IP or `--tensor-split` configuration. See **[docs/PORTABLE_AUTODISCOVERY.md](docs/PORTABLE_AUTODISCOVERY.md)**.
 
 ---
 
@@ -85,7 +90,22 @@ flowchart TD
 
 ## 4. Quickstart: Launching the Cluster
 
-### Step 1: Start Worker Nodes
+### Option A: Zero-Config Auto-Discovery (Recommended)
+On the coordinator workstation:
+```bash
+python scripts/gateway.py
+```
+
+On any worker machine (macOS, Windows, or Linux):
+```bash
+python scripts/node_agent.py
+```
+The node automatically calculates available RAM via kernel primitives, starts `ggml-rpc-server`, broadcasts a UDP discovery beacon to port `50050`, and joins the cluster. The Gateway dynamically compiles the exact `--rpc` and `--tensor-split` flags for your model.
+
+---
+
+### Option B: Manual Static Launch
+#### Step 1: Start Worker Nodes
 On each worker machine, launch the `ggml-rpc-server` daemon:
 
 ```bash
@@ -157,16 +177,19 @@ See **[docs/OFFLINE_RAG_ARCHITECTURE.md](docs/OFFLINE_RAG_ARCHITECTURE.md)** for
 Offline-AI-Cluster/
 ├── README.md                           # Master architectural guide & quickstart
 ├── ROADMAP.md                          # 5-phase engineering roadmap
+├── AGENTS.md                           # Autonomous AI agent coding guidelines & invariants
 ├── config/
 │   └── cluster.json                    # Fleet configuration, node IPs, tensor weights & timeouts
 ├── scripts/
-│   ├── gateway.py                      # Multi-threaded circuit breaker with <500ms failover
+│   ├── gateway.py                      # Multi-threaded circuit breaker & UDP auto-discovery beacon
+│   ├── node_agent.py                   # Portable single-script worker agent (zero pip dependencies)
 │   ├── rag_engine.py                   # 100% offline RAG pipeline (chunking, embedding, retrieval)
 │   ├── setup_macos.sh                  # One-click build script for macOS
 │   ├── setup_linux.sh                  # One-click build script for Linux
 │   └── setup_windows.bat               # One-click build script for Windows
 ├── docs/
 │   ├── DISTRIBUTED_TENSOR_SPLITTING.md # Exhaustive cross-platform sharding manual
+│   ├── PORTABLE_AUTODISCOVERY.md       # Zero-config auto-discovery protocol architecture
 │   ├── OFFLINE_RAG_ARCHITECTURE.md     # In-depth local vector store & embedding specification
 │   └── llama_cpp_manuals/              # 76 bundled offline upstream documentation manuals
 └── examples/
