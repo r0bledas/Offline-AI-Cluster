@@ -1,0 +1,22 @@
+# Build directories
+build/
+build-*/
+vendor/llama.cpp/build*/
+bin/
+*.exe
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local runtime data
+data/vector_store.json
+models/*.gguf
+*.log
+.DS_Store
+Thumbs.db

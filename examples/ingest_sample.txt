@@ -1,0 +1,21 @@
+# Offline-AI-Cluster Internal Specification Document
+Document ID: SPEC-CLUSTER-2026-V1
+Classification: UNCLASSIFIED // LOCAL AIR-GAPPED ONLY
+
+## Section 1: Memory Partitioning Architecture
+The Offline-AI-Cluster distributes model layers using a weighted proportionality formula based on available host memory:
+- Primary Node (MacBook Air M2): 16 GB unified RAM. Processes Transformer layers 0 through 20 via Metal GPU compute kernels.
+- Secondary Node (MacBook Pro M2): 8 GB unified RAM. Processes Transformer layers 21 through 32 via Metal GPU kernels.
+- Tertiary Node (ThinkPad T450): 16 GB DDR3 RAM. Holds deeper feedforward layers 33 through 50 in system memory using AVX2 instruction set.
+- Quaternary Node (ThinkPad T470): 8 GB DDR4 RAM. Computes layers 51 through 60.
+- Edge Node (Nintendo Switch): 3.2 GB LPDDR4 RAM. Computes tail layers 61 through 64 using Cortex-A57 ARM64 NEON SIMD instructions.
+
+## Section 2: Port Allocations and Network Security
+- GGML RPC Worker Ports: TCP 50052
+- Orchestrator HTTP Server Port: TCP 8080
+- Fault-Tolerant Gateway Port: TCP 8000
+- Local Embedding Engine Port: TCP 8081
+All communications operate strictly within local RFC 1918 subnets (192.168.0.0/16). External WAN traffic is firewalled and dropped by default.
+
+## Section 3: Recovery Protocols
+If any worker node fails health check pings for more than 1,500 milliseconds, the Gateway circuit breaker evicts the node and reroutes subsequent tokens to surviving priority nodes.
