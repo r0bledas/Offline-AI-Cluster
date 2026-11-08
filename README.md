@@ -7,6 +7,9 @@
 
 ---
 
+> [!NOTE]
+> **Unified Master Repository**: This repository now integrates the complete high-performance Apple Silicon Thunderbolt Bridge architecture, dynamic VRAM injection, and exo sharding originally from `mac-ai-cluster`. All cross-platform cluster development (Windows, macOS, Linux, Edge) is permanently unified here.
+
 ## 1. Overview
 
 **Offline-AI-Cluster** is a public, open-source framework engineered to aggregate arbitrary, heterogeneous consumer and workstation hardware into a **unified, air-gapped AI compute cluster with integrated local Retrieval-Augmented Generation (RAG)**.
@@ -144,10 +147,32 @@ Send queries to `http://localhost:8000/v1/chat/completions` using any OpenAI-com
 
 ---
 
+
+---
+
+## 4. Direct Updates Engine (eLlama-Style Automated Sync)
+
+`Offline-AI-Cluster` features an automated, zero-dependency binary update engine inspired by `eLlama`'s `UpdateManager.cs`. It directly queries GitHub releases for upstream `llama.cpp`, detects your operating system and hardware accelerators (Vulkan, Apple Metal, or CPU AVX2), and upgrades binaries in-place without compiling from source:
+
+```bash
+# Check for latest upstream releases:
+node scripts/updater.js --check
+# or: python scripts/updater.py --check
+
+# Upgrade binaries in-place (Windows):
+scripts\update_llama_cpp.bat
+
+# Upgrade binaries on macOS (Metal) or Linux:
+./scripts/update_llama_cpp.sh
+```
+
+---
+
 ## 5. Cross-Platform Documentation Directory
 
 Comprehensive, step-by-step compilation, firewall, and background daemon guides for every platform:
 
+- **[Apple Silicon & Thunderbolt Guide](docs/platforms/APPLE_SILICON_THUNDERBOLT_GUIDE.md)**: Point-to-point Thunderbolt 3/4 (40 Gbps, <0.15ms latency) clustering for M-series Macs with dynamic `iogpu` VRAM headroom expansion.
 - **[macOS Setup Guide](docs/DISTRIBUTED_TENSOR_SPLITTING.md#platform-a-macos)**: Apple Silicon Metal acceleration (`-DGGML_METAL=ON`), Homebrew prerequisites, point-to-point Thunderbolt 4 networking, and `launchd` background service configuration.
 - **[Linux Setup Guide](docs/DISTRIBUTED_TENSOR_SPLITTING.md#platform-b-linux)**: Copy-paste instructions for Debian/Ubuntu, Arch Linux, Fedora/RHEL, openSUSE, Alpine Linux (musl libc), and `systemd` service units.
 - **[Windows Setup Guide](docs/DISTRIBUTED_TENSOR_SPLITTING.md#platform-c-windows)**: Visual Studio 2022 Community (MSVC), zero-install `w64devkit`, WSL2 setup, NSSM service management, and Windows Defender Firewall rules.
