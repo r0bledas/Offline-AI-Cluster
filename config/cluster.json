@@ -1,75 +1,72 @@
 {
-  "cluster_name": "Offline-Heterogeneous-Fleet",
+  "cluster_name": "Offline-Distributed-AI-Mesh",
   "version": "1.0.0",
+  "description": "Production configuration template for heterogeneous offline inference cluster.",
   "orchestrator": {
-    "device": "MacBook Air M2",
-    "ip": "192.168.1.10",
+    "name": "Primary-Orchestrator",
+    "ip": "192.168.1.100",
     "port": 8080,
-    "memory_gb": 16,
-    "backend": "metal"
+    "role": "coordinator"
   },
   "nodes": [
     {
-      "name": "MacBook Air M2",
-      "ip": "192.168.1.10",
+      "id": "node-01",
+      "name": "GPU-Compute-Node",
+      "ip": "192.168.1.101",
       "rpc_port": 50052,
       "http_port": 8080,
       "memory_gb": 16,
       "priority": 1,
-      "accelerator": "metal",
+      "accelerator": "metal_or_cuda",
       "tensor_weight": 16
     },
     {
-      "name": "MacBook Pro M2",
-      "ip": "192.168.1.11",
-      "rpc_port": 50052,
-      "http_port": 8080,
-      "memory_gb": 8,
-      "priority": 2,
-      "accelerator": "metal",
-      "tensor_weight": 8
-    },
-    {
-      "name": "ThinkPad T450",
-      "ip": "192.168.1.12",
+      "id": "node-02",
+      "name": "High-Memory-CPU-Node",
+      "ip": "192.168.1.102",
       "rpc_port": 50052,
       "http_port": 8080,
       "memory_gb": 16,
-      "priority": 3,
+      "priority": 2,
       "accelerator": "cpu_avx2",
       "tensor_weight": 16
     },
     {
-      "name": "ThinkPad T470",
-      "ip": "192.168.1.13",
+      "id": "node-03",
+      "name": "Secondary-CPU-Node",
+      "ip": "192.168.1.103",
       "rpc_port": 50052,
       "http_port": 8080,
       "memory_gb": 8,
-      "priority": 4,
+      "priority": 3,
       "accelerator": "cpu_avx2",
       "tensor_weight": 8
     },
     {
-      "name": "Nintendo Switch",
-      "ip": "192.168.1.14",
+      "id": "node-04",
+      "name": "Edge-Embedded-Node",
+      "ip": "192.168.1.104",
       "rpc_port": 50052,
       "http_port": 8080,
-      "memory_gb": 3.2,
-      "priority": 5,
+      "memory_gb": 4,
+      "priority": 4,
       "accelerator": "arm64_neon",
-      "tensor_weight": 3
+      "tensor_weight": 4
     }
   ],
   "rag": {
     "embedding_model": "bge-small-en-v1.5.gguf",
+    "embedding_endpoint": "http://localhost:8081/v1/embeddings",
     "embedding_dim": 384,
     "chunk_size": 512,
     "chunk_overlap": 64,
     "vector_store_path": "data/vector_store.json"
   },
   "gateway": {
+    "listen_host": "0.0.0.0",
     "listen_port": 8000,
     "health_check_interval_sec": 3,
-    "failover_timeout_sec": 1.5
+    "failover_timeout_sec": 1.5,
+    "max_retries_per_request": 2
   }
 }

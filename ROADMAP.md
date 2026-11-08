@@ -4,7 +4,7 @@
 ---
 
 ## Vision Statement
-**Offline-AI-Cluster** is engineered for environments where **zero external data leaves your local network**. Whether due to operational security, air-gapped field deployments, or privacy constraints, this project transforms an arbitrary collection of consumer hardware (Macs, PCs, Linux boxes, and embedded consoles) into a unified, resilient, private AI computing engine with integrated local knowledge retrieval (RAG).
+**Offline-AI-Cluster** is a public, open-source framework engineered for environments where **zero data leaves your local network**. Whether deployed in air-gapped secure facilities, mobile field units, private enterprise laboratories, or local homelab networks, this project transforms an arbitrary collection of consumer and workstation hardware into a unified, resilient private AI compute mesh with integrated local knowledge retrieval (RAG).
 
 ```
    ┌────────────────────────────────────────────────────────────────────────┐
@@ -20,34 +20,34 @@
 
 ---
 
-## Milestone 1: Heterogeneous Tensor Sharding Engine (Current Core)
-*Goal: Pool disparate CPU, GPU, and ARM64 memory into a single virtual address space capable of running 32B–70B parameter models without cloud dependencies.*
+## Milestone 1: Heterogeneous Tensor Sharding Engine (Core Foundation)
+*Goal: Pool disparate CPU, GPU, and ARM64 memory across diverse operating systems into a single virtual address space capable of running 32B–70B parameter models without cloud dependencies.*
 
 - [x] **Cross-Platform RPC Protocol Standardization**:
-  - Implement and document GGML RPC protocol v8 across macOS (Metal), Windows (MSVC/w64devkit), Linux (Debian, Arch, Fedora, Alpine), and Nintendo Switch (Horizon OS / libnx).
+  - Implement and document GGML RPC protocol v8 across macOS (Metal), Windows (MSVC/w64devkit), Linux (Debian, Arch, Fedora, Alpine, openSUSE), and Embedded Edge systems (ARM64 SBCs / Nintendo Switch).
 - [x] **Non-Contiguous Memory Chunking**:
-  - Unconditional buffer splitting ($\le 512\text{ MB}$ chunks) to eliminate heap allocation ceilings on embedded/constrained kernels.
+  - Unconditional buffer splitting ($\le 512\text{ MB}$ chunks) to eliminate single-allocation heap ceilings on embedded, low-memory, or customized kernels.
 - [x] **Proportional Memory Scheduling**:
   - Dynamic calculation of `--tensor-split` weights based on live node memory reports (`RPC_CMD_GET_DEVICE_MEMORY`).
 - [ ] **Automated mDNS / Zero-Config Peer Discovery**:
   - Implement Bonjour / Avahi mDNS daemon so worker nodes broadcasting `_ggml-rpc._tcp.local` are automatically discovered and aggregated by the Orchestrator without manual IP entry.
 - [ ] **Dynamic Re-quantization On-the-Fly**:
-  - Worker-specific quantization scaling (e.g., M2 Metal runs Q8/FP16 layers, ThinkPad CPUs run Q4_K_M, Switch runs IQ2/IQ3).
+  - Worker-specific quantization scaling (e.g. accelerated GPU nodes execute Q8/FP16 layers, standard CPU nodes execute Q4_K_M, and edge nodes execute compact IQ2/IQ3 layers).
 
 ---
 
 ## Milestone 2: Low-Latency Transport & High-Speed Interconnects
-*Goal: Overcome Wi-Fi latency bottlenecks to push token throughput beyond 15–20 tokens/sec across heterogeneous machines.*
+*Goal: Overcome local network latency bottlenecks to maximize token throughput across heterogeneous machines.*
 
 - [x] **Local Disk Cache Persistence**:
-  - Implement client-side disk caching (`-c` flag) storing hashed layer weights under local caches (`$HOME/.cache/llama.cpp/rpc`) to eliminate redundant multi-gigabyte network transfers on launch.
-- [ ] **Dual-Tier Network Bridging (Thunderbolt 4 + Ethernet)**:
-  - Configure direct point-to-point Thunderbolt 4 networking (20–40 Gbps, $<0.1\text{ ms}$ latency) between Apple Silicon nodes using `librdma` over Thunderbolt (Apple TN3205).
-  - Bridge remaining CPU/Switch worker nodes over 1 Gbps / 2.5 Gbps Ethernet.
+  - Implement client-side disk caching (`-c` flag) storing hashed layer weights under local caches (`$HOME/.cache/llama.cpp/rpc` or `%LOCALAPPDATA%`) to eliminate redundant multi-gigabyte network transfers on launch.
+- [ ] **Dual-Tier Network Bridging (Thunderbolt / RoCEv2 + Ethernet)**:
+  - Point-to-point high-speed links (20–40 Gbps, $<0.1\text{ ms}$ latency) between high-performance nodes using RDMA (e.g., Apple RDMA over Thunderbolt via `librdma` TN3205 or Linux RoCEv2 via `libibverbs`).
+  - Bridge remaining CPU and edge worker nodes over 1 Gbps / 2.5 Gbps Ethernet or 5 GHz Wi-Fi.
 - [ ] **TCP Pipelining & Nagle's Algorithm Bypass**:
   - Enable `TCP_NODELAY` and tune socket buffer depths (`SO_RCVBUF`, `SO_SNDBUF` to $\ge 4\text{ MB}$) across all client sockets to prevent packet stall during activation vector back-propagation.
 - [ ] **Async Tensor Streaming**:
-  - Implement overlapping compute and transfer (double-buffering) so Node $N+1$ pre-fetches input activations while Node $N$ computes its final attention block.
+  - Overlap compute and transfer (double-buffering) so Node $N+1$ pre-fetches input activations while Node $N$ computes its final attention block.
 
 ---
 
@@ -64,7 +64,7 @@ flowchart LR
     EmbedderQuery --> Retriever["Hybrid Retriever (BM25 + Cosine)"]
     VDB --> Retriever
     Retriever --> Context["Top-K Context Chunks"]
-    Context --> Orchestrator["Cluster Orchestrator (32B Model)"]
+    Context --> Orchestrator["Cluster Orchestrator (32B/70B Model)"]
     Orchestrator --> Answer["Verified Response with Citations"]
 ```
 
@@ -82,7 +82,7 @@ flowchart LR
 ---
 
 ## Milestone 4: Fault Tolerance, Circuit Breaking & Self-Healing
-*Goal: Ensure the cluster operates continuously ("faillessly") even when laptops sleep, batteries run low, or Wi-Fi packets drop.*
+*Goal: Ensure the cluster operates continuously ("faillessly") even when laptops sleep, batteries run low, or network packets drop.*
 
 - [x] **Circuit-Breaking Reverse Proxy**:
   - Multi-threaded Python cluster gateway (`scripts/gateway.py`) with active heartbeat polling (`/api/status` & `/health`).
@@ -91,7 +91,7 @@ flowchart LR
 - [ ] **Graceful Node Eviction & Layer Rebalancing**:
   - Dynamic layer re-allocation: When worker node departure is detected, the Orchestrator recalculates `--tensor-split` without restarting the process.
 - [ ] **Power-Aware Load Shedding**:
-  - Monitor battery level and thermal throttling on mobile nodes (MacBook Air / Switch); dynamically offload compute to AC-powered desktop/ThinkPad nodes when battery drops below 20%.
+  - Monitor battery level and thermal throttling on mobile/edge nodes; dynamically offload compute to AC-powered desktop nodes when battery drops below 20%.
 
 ---
 
@@ -100,12 +100,12 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    Task["Complex User Task"] --> Planner["MacBook Air M2 (16GB)<br/>Role: Orchestrator & Planner (14B/32B)"]
+    Task["Complex User Task"] --> Planner["Coordinator Workstation<br/>Role: Orchestrator & Planner (14B/32B/70B)"]
     
-    Planner --> CodeSub["MacBook Pro M2 (8GB)<br/>Role: High-Speed Coder (Qwen-2.5-Coder)"]
-    Planner --> RAGSub["ThinkPad T450 (16GB)<br/>Role: Vector Search & Embeddings"]
-    Planner --> ToolSub["ThinkPad T470 (8GB)<br/>Role: Local Sandbox & Execution"]
-    Planner --> ConsoleSub["Nintendo Switch (3.2GB)<br/>Role: Physical Status Console & Joy-Con Controller"]
+    Planner --> CodeSub["High-Speed GPU Worker<br/>Role: High-Speed Coder (Qwen-Coder / Mistral)"]
+    Planner --> RAGSub["Dedicated CPU Host<br/>Role: Vector Search & Embeddings Engine"]
+    Planner --> ToolSub["Secondary Host<br/>Role: Sandboxed Tool & Code Execution"]
+    Planner --> ConsoleSub["Edge / Console Node<br/>Role: Physical Status Console & Telemetry Monitor"]
     
     CodeSub --> Planner
     RAGSub --> Planner
@@ -115,18 +115,18 @@ flowchart TD
 
 - [ ] **Role-Specialized Clustering**:
   - Assign dedicated models to nodes:
-    - **Host 1 (MacBook Air M2)**: Reasoning & Planning (`Qwen-2.5-14B` or `Mistral-Small`).
-    - **Host 2 (MacBook Pro M2)**: Fast Speculative Drafter / Coder (generates draft tokens at 40 t/s).
-    - **Host 3 (ThinkPad T450)**: Permanent Vector Store & Document Ingestion worker.
-    - **Host 4 (ThinkPad T470)**: Headless Tool execution sandbox.
-    - **Host 5 (Nintendo Switch)**: Physical live dashboard displaying token velocity, cluster RAM graphs, and Joy-Con push-to-talk interrupt controls.
+    - **Primary Host**: Reasoning & Planning (`Qwen-2.5-14B/32B` or `Llama-3.1-70B`).
+    - **GPU Accelerator Node**: Fast Speculative Drafter / Coder (30–60 tokens/sec).
+    - **High-Memory CPU Host**: Vector Store & Document Ingestion worker.
+    - **Secondary CPU Host**: Headless Tool execution sandbox.
+    - **Edge / Console Node**: Physical live dashboard displaying token velocity, cluster RAM graphs, and status telemetry.
 - [ ] **Speculative Distributed Decoding**:
-  - Use the MacBook Pro M2 as the small draft model and the cluster-wide pooled model as the verifier, cutting overall generation latency by $2\times$ to $3\times$.
+  - Use a small local GPU model as the draft model and the cluster-wide pooled model as the verifier, cutting overall generation latency by $2\times$ to $3\times$.
 
 ---
 
-## Progress Tracker & Versioning
-- **v0.1.0**: Heterogeneous GGML RPC architecture validation across macOS, Windows, Linux, Switch.
+## Version History
+- **v0.1.0**: Heterogeneous GGML RPC architecture validation across macOS, Windows, Linux, and embedded targets.
 - **v0.2.0**: Zero-cloud RAG pipeline prototype (`scripts/rag_engine.py`) and offline gateway (`scripts/gateway.py`).
 - **v0.3.0** (Next): mDNS discovery daemon and automatic `--tensor-split` negotiator.
 - **v1.0.0**: Production-ready air-gapped distributed swarm with failover and live memory rebalancing.

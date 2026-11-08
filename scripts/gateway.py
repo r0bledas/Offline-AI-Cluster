@@ -9,10 +9,8 @@ import http.server
 import json
 import os
 import sys
-import time
 import urllib.request
 import urllib.error
-import socket
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "cluster.json")
 
@@ -23,15 +21,14 @@ def load_config():
                 return json.load(f)
         except Exception as e:
             print(f"[Warning] Failed to parse cluster.json: {e}")
-    # Default fallback fleet
+    # Generic fallback fleet template
     return {
         "gateway": {"listen_port": 8000, "failover_timeout_sec": 1.5},
         "nodes": [
-            {"name": "MacBook Air M2", "ip": "192.168.1.10", "http_port": 8080, "priority": 1},
-            {"name": "MacBook Pro M2", "ip": "192.168.1.11", "http_port": 8080, "priority": 2},
-            {"name": "ThinkPad T450",  "ip": "192.168.1.12", "http_port": 8080, "priority": 3},
-            {"name": "ThinkPad T470",  "ip": "192.168.1.13", "http_port": 8080, "priority": 4},
-            {"name": "Nintendo Switch","ip": "192.168.1.14", "http_port": 8080, "priority": 5},
+            {"name": "Node-GPU-01", "ip": "127.0.0.1", "http_port": 8080, "priority": 1},
+            {"name": "Node-CPU-02", "ip": "192.168.1.102", "http_port": 8080, "priority": 2},
+            {"name": "Node-CPU-03", "ip": "192.168.1.103", "http_port": 8080, "priority": 3},
+            {"name": "Node-Edge-04","ip": "192.168.1.104", "http_port": 8080, "priority": 4},
         ]
     }
 
@@ -44,10 +41,9 @@ def get_node_url(node):
 
 def check_node_alive(node, timeout=1.5):
     url = get_node_url(node)
-    # Check status endpoint
     for endpoint in ["/api/status", "/health", "/"]:
         try:
-            req = urllib.request.Request(f"{url}{endpoint}", headers={"User-Agent": "ClusterGateway/1.0"})
+            req = urllib.request.Request(f"{url}{endpoint}", headers={"User-Agent": "OfflineClusterGateway/1.0"})
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 if resp.status == 200:
                     return True
@@ -64,7 +60,6 @@ def get_active_nodes():
 
 class ClusterGatewayHandler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format, *args):
-        # Clean formatted logging
         sys.stderr.write(f"[Gateway] {self.client_address[0]} - {format % args}\n")
 
     def do_OPTIONS(self):
@@ -89,6 +84,7 @@ class ClusterGatewayHandler(http.server.BaseHTTPRequestHandler):
         for node in NODES:
             alive = check_node_alive(node)
             status_report.append({
+                "id": node.get("id", node.get("name")),
                 "name": node["name"],
                 "ip": node["ip"],
                 "url": get_node_url(node),
@@ -140,7 +136,6 @@ class ClusterGatewayHandler(http.server.BaseHTTPRequestHandler):
                     self.wfile.write(resp_data)
                     return
             except urllib.error.HTTPError as e:
-                # Upstream application error, return to client
                 err_data = e.read()
                 self.send_response(e.code)
                 self.send_header("Content-Type", "application/json")
@@ -149,8 +144,8 @@ class ClusterGatewayHandler(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(err_data)
                 return
             except Exception as e:
-                print(f"[CircuitBreaker] Node '{node['name']}' ({node['ip']}) failed during {method}: {e}")
-                print(f"[CircuitBreaker] Rerouting to next priority node in cluster...")
+                print(f"[CircuitBreaker] Node '{node['name']}' ({node['ip']}) unreachable during {method}: {e}")
+                print(f"[CircuitBreaker] Rerouting to next candidate node in cluster...")
                 continue
 
         self.send_error(502, "All candidate cluster nodes failed to respond")
