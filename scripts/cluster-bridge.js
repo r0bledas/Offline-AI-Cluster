@@ -110,7 +110,15 @@ const server = http.createServer(async (req, res) => {
       const isListening = await checkPortListening(50052);
       
       let models = [];
-      ['D:\\llms', 'C:\\llms', path.join(BASE_DIR, 'models')].forEach(dir => {
+      // Check model directories (relative models/ first, then environment override, then standard local drive folders)
+      const modelDirs = [
+        path.join(BASE_DIR, 'models'),
+        process.env.CLUSTER_MODEL_DIR,
+        'D:\\llms',
+        'C:\\llms'
+      ].filter(Boolean);
+
+      modelDirs.forEach(dir => {
         if (fs.existsSync(dir)) {
           const files = fs.readdirSync(dir).filter(f => f.endsWith('.gguf')).map(f => {
             const stat = fs.statSync(path.join(dir, f));
@@ -154,11 +162,11 @@ const server = http.createServer(async (req, res) => {
       // Locate ggml-rpc-server
       let binaryPath = RPC_EXE;
       if (!fs.existsSync(binaryPath)) {
-        // Search in common local folders
+        // Search in common local folders (relative and absolute)
         const candidates = [
           path.join(process.cwd(), 'ggml-rpc-server.exe'),
-          'C:\\Offline-AI-Cluster\\bin\\ggml-rpc-server.exe',
-          'D:\\Offline-AI-Cluster\\bin\\ggml-rpc-server.exe',
+          path.join(BASE_DIR, 'bin', 'ggml-rpc-server.exe'),
+          path.join(process.cwd(), 'bin', 'ggml-rpc-server.exe'),
           path.join(os.tmpdir(), 'worker_node', 'ggml-rpc-server.exe')
         ];
         binaryPath = candidates.find(p => fs.existsSync(p)) || 'ggml-rpc-server.exe';

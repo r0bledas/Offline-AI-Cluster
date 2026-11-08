@@ -24,10 +24,11 @@ This folder contains pre-packaged runtimes and libraries needed to run the **Off
 If you are on a restricted machine or don't want to run system installers, you can copy all portable dependencies directly into `bin/` with a single command:
 
 ```cmd
-cd /d D:\Offline-AI-Cluster
+cd /d "%~dp0\.."
 copy redist\*.dll bin\
 copy redist\node.exe bin\
 ```
+*(Or simply open the cluster folder in Command Prompt and run the copy commands above).*
 
 Once copied into `bin/`:
 1. `bin\llama-server.exe` and `bin\ggml-rpc-server.exe` will find `vcruntime140.dll` and `msvcp140.dll` in their own folder and run with zero system dependencies.

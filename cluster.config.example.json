@@ -3,7 +3,7 @@
     "host": "0.0.0.0",
     "port": 8000,
     "bridgePort": 50050,
-    "model": "D:\\llms\\Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+    "model": "models\\Llama-3.2-1B-Instruct-Q4_K_M.gguf",
     "contextSize": 2048,
     "threads": 4
   },

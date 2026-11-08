@@ -46,11 +46,13 @@ if not exist "bin\llama-server.exe" (
 echo.
 if not exist "models" mkdir "models"
 set MODEL_FOUND=0
-if exist "D:\llms\*.gguf" set MODEL_FOUND=1
 if exist "models\*.gguf" set MODEL_FOUND=1
+if exist "%~dp0models\*.gguf" set MODEL_FOUND=1
+if exist "D:\llms\*.gguf" set MODEL_FOUND=1
+if exist "C:\llms\*.gguf" set MODEL_FOUND=1
 
 if %MODEL_FOUND% EQU 0 (
-    echo [!] No GGUF models found in models\ or D:\llms\.
+    echo [!] No GGUF models found in models\ or standard folders.
     echo.
     echo   [1] Download verified starter model (Llama-3.2-1B-Instruct-Q4_K_M, 807 MB)
     echo   [2] Skip model download (I will provide my own GGUF in models\)
@@ -65,7 +67,7 @@ if %MODEL_FOUND% EQU 0 (
         )
     )
 ) else (
-    echo [✓] GGUF models detected on system.
+    echo [✓] GGUF models detected in local repository or models directory.
 )
 
 :: 5. Add to User PATH

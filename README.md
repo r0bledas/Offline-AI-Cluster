@@ -93,20 +93,31 @@ flowchart TD
 
 ## 4. Quickstart: Launching the Cluster
 
-### Option A: 1-Click Automated Setup for Any New Machine (Recommended)
+### Option A: 1-Click Automated Setup for Any New Machine (Online or 100% Offline USB)
 
-To set up a fresh PC from GitHub in 1 click:
+To set up a fresh PC in 1 click:
 
-#### On Windows:
+#### Mode 1: Online Setup (Cloned from GitHub)
 ```bat
 git clone https://github.com/r0bledas/Offline-AI-Cluster.git
 cd Offline-AI-Cluster
 setup.bat
 ```
+
+#### Mode 2: 100% Air-Gapped Offline Setup (From USB Drive / Local Copy)
+No internet connection, git clone, or package managers required. Simply copy the cluster directory to any drive or run directly from your USB drive:
+```bat
+cd Offline-AI-Cluster
+copy redist\*.dll bin\
+copy redist\node.exe bin\
+LAUNCH_CLUSTER.bat
+```
+*(All models are auto-discovered from `models/*.gguf` relative to the cluster folder or via `CLUSTER_MODEL_DIR`).*
+
 `setup.bat` automatically:
 1. Initializes `cluster.config.json` from the dynamic template.
-2. Downloads and unpacks official native `llama.cpp` binaries (`llama-server.exe`, `ggml-rpc-server.exe`, Vulkan/AVX2 DLLs).
-3. Offers 1-click download of verified starter model (`Llama-3.2-1B-Instruct-Q4_K_M.gguf`, 807 MB).
+2. Downloads or locates native `llama.cpp` binaries (`llama-server.exe`, `ggml-rpc-server.exe`, Vulkan/AVX2 DLLs).
+3. Auto-discovers local models in `./models/*.gguf` or offers 1-click starter model download.
 4. Adds the `cluster` CLI command to your system `PATH`.
 5. Creates a 1-click `Offline AI Cluster.bat` launcher on your Desktop.
 6. Launches the interactive Multi-Node Hub.
