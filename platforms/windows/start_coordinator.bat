@@ -41,7 +41,14 @@ if "%MODEL_PATH%"=="" (
 
 set WORKER_RPC=%~2
 if "%WORKER_RPC%"=="" (
-    set WORKER_RPC=192.168.1.18:50052
+    for /f "delims=" %%i in ('node -e "try { console.log(require('../../cluster.js').getRpcArgString()); } catch(e){}"') do set WORKER_RPC=%%i
+)
+if "%WORKER_RPC%"=="" (
+    if not "%CLUSTER_WORKERS%"=="" (
+        set WORKER_RPC=%CLUSTER_WORKERS%
+    ) else (
+        set WORKER_RPC=127.0.0.1:50052
+    )
 )
 
 set HOST=0.0.0.0

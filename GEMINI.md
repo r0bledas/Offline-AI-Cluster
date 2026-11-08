@@ -1,76 +1,98 @@
-# Offline AI Cluster — Multi-Node Workflow & Operations Guide
+# Offline AI Cluster — Multi-Node Distributed Architecture & Operations Guide
 
-## Cluster Topology & Architecture
+## Overview
 
-This environment operates an offline, distributed edge AI cluster sharded across two interconnected ThinkPad nodes over a gigabit local LAN and encrypted Tailscale overlay network.
+The **Offline-AI-Cluster** is a fully decentralized, heterogeneous multi-node edge AI inference cluster. It is designed to pool memory and compute across arbitrary network-connected hardware (laptops, desktops, mini PCs, Macs, Linux boards) over Gigabit LAN or encrypted overlay networks (Tailscale).
 
-### Node Specifications
+---
 
-| Parameter | Coordinator Node (Current Host) | Worker Node |
+## Dynamic Multi-Node Architecture
+
+The cluster does **not** rely on hardcoded machine hostnames or static IP addresses. All node coordination is dynamic and driven by [`cluster.config.json`](file:///D:/Offline-AI-Cluster/cluster.config.json) (or environment variables).
+
+### Cluster Configuration (`cluster.config.json`)
+
+To add, remove, or modify nodes in the cluster, edit `cluster.config.json`:
+
+```json
+{
+  "coordinator": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "bridgePort": 50050,
+    "model": "D:\\llms\\Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+    "contextSize": 2048,
+    "threads": 4
+  },
+  "workers": [
+    {
+      "name": "Node-1",
+      "host": "192.168.1.18",
+      "rpcPort": 50052,
+      "bridgePort": 50050,
+      "threads": 4
+    },
+    {
+      "name": "Node-2",
+      "host": "192.168.1.19",
+      "rpcPort": 50052,
+      "bridgePort": 50050,
+      "threads": 8
+    }
+  ],
+  "authToken": "cluster-secret-token"
+}
+```
+
+*Note: `cluster.config.json` is gitignored to keep private IP addresses and credentials local. A template is provided in [`cluster.config.example.json`](file:///D:/Offline-AI-Cluster/cluster.config.example.json).*
+
+---
+
+## Environment Variable Overrides
+
+Any node can participate without modifying config files by using standard environment variables:
+
+| Variable | Description | Example |
 | :--- | :--- | :--- |
-| **Model** | ThinkPad T470 (`20HD000TUS`) | ThinkPad T450 |
-| **Installed RAM** | 8 GB DDR4 | 16 GB DDR3L |
-| **Local LAN IP** | `192.168.1.2` | `192.168.1.18` |
-| **Tailscale IP** | `100.77.73.92` (`t470`) | `100.79.207.24` (`t450`) |
-| **Default User** | `T470` | `T450` |
-| **Password** | Current Session | `694200` |
-| **Role** | Master Coordinator / Inference Server | Tensor Worker / RPC Offload |
+| `CLUSTER_WORKERS` | Comma-separated list of remote RPC workers | `192.168.1.18:50052,10.0.0.5:50052` |
+| `CLUSTER_AUTH_TOKEN` | Shared authentication secret for node bridge | `your-secret-token` |
+| `CLUSTER_BRIDGE_PORT`| Port for node telemetry and remote execution | `50050` |
+| `CLUSTER_MODEL` | Default GGUF model path | `D:\llms\Llama-3.2-1B-Instruct-Q4_K_M.gguf` |
 
 ---
 
-## Authentication & Persistence
-
-- **Cluster Auth Token**: `694200` (Passed via `X-Cluster-Token` HTTP header or `?token=694200`).
-- **RDP Target Credentials**: Pre-authenticated in Windows Credential Manager under `TERMSRV/192.168.1.18` and `TERMSRV/100.79.207.24` with user `T450` and password `694200`.
-- **RDP Port**: `3389` (Console session: `mstsc.exe /v:192.168.1.18`).
-
----
-
-## Unified Cluster CLI (`cluster`)
+## Multi-Node CLI (`cluster`)
 
 The cluster provides a unified controller located at [`D:\Offline-AI-Cluster\cluster.cmd`](file:///D:/Offline-AI-Cluster/cluster.cmd) and [`D:\Offline-AI-Cluster\cluster.js`](file:///D:/Offline-AI-Cluster/cluster.js).
 
-### Core Commands
+### Commands
 
 ```bat
-:: 1. Check health, telemetry, RAM usage, and active ports on both nodes
+:: Check health, ports, and telemetry across all configured nodes
 cluster status
 
-:: 2. Send an inference prompt to the distributed cluster
+:: Send an inference prompt to the distributed cluster
 cluster prompt "Explain distributed tensor parallelization in two sentences."
 
-:: 3. Remotely start the tensor RPC worker on T450
+:: Start remote worker daemons across all nodes (or a specific node index)
 cluster worker-start
+cluster worker-start 0
 
-:: 4. Remotely stop the tensor RPC worker on T450
+:: Stop remote worker daemons
 cluster worker-stop
 
-:: 5. Execute any shell command on T450 remotely and display output
-cluster exec "systeminfo"
+:: Execute a shell command on a specific worker node
+cluster exec 0 "systeminfo"
 
-:: 6. Launch Remote Desktop session to T450 in 1 click
-cluster rdp
+:: Generate the --rpc CLI argument string for llama-server
+cluster rpc-args
 
-:: 7. Check and hot-update llama.cpp binaries directly from GitHub upstream
+:: Launch 1-click Remote Desktop session to a worker node
+cluster rdp 0
+
+:: Check and hot-update llama.cpp binaries from GitHub upstream
 cluster update
 ```
-
----
-
-## Port Allocation & Service Map
-
-| Port | Protocol | Host | Description |
-| :--- | :--- | :--- | :--- |
-| **8000** | HTTP | T470 / T450 | Master Coordinator (`llama-server.exe`) on T470 / Vaultwarden on T450 |
-| **50050** | HTTP | T470 & T450 | Cluster Node Bridge Daemon (`cluster-bridge.js`) |
-| **50052** | TCP RPC | T450 | GGML RPC Tensor Worker (`ggml-rpc-server.exe`) |
-| **9999** | HTTP | T470 | Binary & package distribution daemon (`serve_bin.js`) |
-| **3389** | RDP | T450 | Windows Remote Desktop Protocol (User `T450`) |
-| **8020** | HTTP | T450 | Navidrome Music Streaming Server |
-| **8080** | HTTP | T450 | Raudel Portal Web Dashboard (`Python 3.11.9 SimpleHTTP`) |
-| **8090** | HTTP | T450 | Kiwix Wikipedia & iFixit Offline Archives |
-| **8095** | HTTP | T450 | Raudel Send (`/api/upload`, `/api/download`, `/api/slots`) |
-| **8100** | HTTP | T450 | Minecraft Server Playit Tunnel Controller (`/api/restart`) |
 
 ---
 
@@ -80,9 +102,9 @@ cluster update
    - **NO Ollama, NO LM Studio**.
    - Always run native `llama-server.exe`, `llama-cli.exe`, and `ggml-rpc-server.exe`.
 2. **Model Storage**:
-   - Primary model directory: `D:\llms\`.
-   - Production Default Model: [`D:\llms\Llama-3.2-1B-Instruct-Q4_K_M.gguf`](file:///D:/llms/Llama-3.2-1B-Instruct-Q4_K_M.gguf) (807 MB, benchmarked at 33.76 t/s eval, 11.42 t/s generation).
-3. **Cross-Node File Sync**:
-   - Binaries and scripts are staged in [`D:\Offline-AI-Cluster\bin\`](file:///D:/Offline-AI-Cluster/bin/).
-   - Complete worker archive is staged at [`D:\worker_t450.zip`](file:///D:/worker_t450.zip).
-   - Fast transfer between nodes can use Taildrop (`tailscale file cp`), Raudel Send (port 8095), or Cluster Bridge streaming (`POST /api/upload`).
+   - Standard GGUF models are stored in `D:\llms\` or `models/`.
+   - Never duplicate models into proprietary blob directories.
+3. **Multi-Node Sharding**:
+   - When multiple workers are configured, the coordinator automatically builds the multi-endpoint argument:
+     `--rpc worker1:50052,worker2:50052,worker3:50052`
+   - Tensor graphs are partitioned across all active backends based on available memory and compute threads.

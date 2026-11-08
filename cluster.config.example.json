@@ -1,0 +1,20 @@
+{
+  "coordinator": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "bridgePort": 50050,
+    "model": "D:\\llms\\Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+    "contextSize": 2048,
+    "threads": 4
+  },
+  "workers": [
+    {
+      "name": "Worker-Node-1",
+      "host": "192.168.1.18",
+      "rpcPort": 50052,
+      "bridgePort": 50050,
+      "threads": 4
+    }
+  ],
+  "authToken": "CHANGE_ME_IN_PRODUCTION"
+}

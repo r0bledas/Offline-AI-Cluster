@@ -11,10 +11,19 @@ const path = require('path');
 const { exec, spawn } = require('child_process');
 
 const PORT = process.env.CLUSTER_BRIDGE_PORT || 50050;
-const AUTH_TOKEN = process.env.CLUSTER_AUTH_TOKEN || '694200';
 const BASE_DIR = path.resolve(__dirname, '..');
 const BIN_DIR = path.join(BASE_DIR, 'bin');
 const RPC_EXE = path.join(BIN_DIR, 'ggml-rpc-server.exe');
+const CONFIG_FILE = path.join(BASE_DIR, 'cluster.config.json');
+
+let authToken = process.env.CLUSTER_AUTH_TOKEN || '';
+if (!authToken && fs.existsSync(CONFIG_FILE)) {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+    if (cfg.authToken) authToken = cfg.authToken;
+  } catch (e) {}
+}
+const AUTH_TOKEN = authToken || 'cluster-token-secret';
 
 let rpcProcess = null;
 

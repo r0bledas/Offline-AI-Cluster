@@ -1,23 +1,23 @@
 @echo off
 setlocal enabledelayedexpansion
-title Offline AI Cluster — Master Hub
+title Offline AI Cluster — Multi-Node Hub
 color 0b
 
 :MENU
 cls
 echo ======================================================================
-echo           OFFLINE AI CLUSTER — DISTRIBUTED EDGE AI
+echo           OFFLINE AI CLUSTER — MULTI-NODE DISTRIBUTED AI
 echo ======================================================================
-echo   Coordinator: ThinkPad T470 (8 GB DDR4)   [192.168.1.2  / 100.77.73.92]
-echo   Worker Node: ThinkPad T450 (16 GB DDR3L) [192.168.1.18 / 100.79.207.24]
+echo   Local Node: %COMPUTERNAME% (%OS%)
+echo   Config:     %~dp0cluster.config.json
 echo ======================================================================
 echo.
-echo   [1] Check Cluster Status & Telemetry (Both Nodes)
+echo   [1] Check Cluster Status & Telemetry (All Nodes)
 echo   [2] Send Quick Inference Prompt (CLI Benchmark)
 echo   [3] Open Web Chat Interface (http://localhost:8000)
-echo   [4] Start Remote Worker on T450 (ggml-rpc-server)
-echo   [5] Start Master Coordinator on T470 (llama-server)
-echo   [6] Launch 1-Click Remote Desktop (RDP to T450)
+echo   [4] Start Remote Worker Daemons (All Configured Nodes)
+echo   [5] Start Master Coordinator on This Node (llama-server)
+echo   [6] Launch 1-Click Remote Desktop to Worker Node
 echo   [7] Check & Update Binaries from GitHub Upstream
 echo   [8] Open Cluster Terminal (PowerShell with cluster CLI)
 echo   [9] Exit

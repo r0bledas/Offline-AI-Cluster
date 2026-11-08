@@ -20,3 +20,6 @@ models/*.gguf
 *.log
 .DS_Store
 Thumbs.db
+
+# Cluster local configuration (contains private IPs, tokens, local paths)
+cluster.config.json
